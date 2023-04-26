@@ -7,9 +7,9 @@ import (
 
 // Errrors
 var (
-	ErrNotFound   = errors.New("product not found")
-	ErrInternal   = errors.New("an internal error")
-	ErrDuplicated = errors.New("duplicated product")
+	ErrRepositoryNotFound   = errors.New("product not found")
+	ErrRepositoryInternal   = errors.New("an internal error")
+	ErrRepositoryDuplicated = errors.New("duplicated product")
 )
 
 type StoreInterface interface {
