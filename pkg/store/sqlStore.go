@@ -5,8 +5,13 @@ import (
 	"github.com/laurianderson/bootcamp_go_repository/internal/domain"
 )
 
+// Querys
 const (
-	//declarar las querys acá 
+	QueryGetByID         = `SELECT id, name, quantity, code_value, is_published, expiration, price FROM products WHERE id = ?; `
+	QueryCreate          = `INSERT INTO products (name, quantity, code_value, is_published, expiration, price) VALUES (?, ?, ?, ?, ?, ?);`
+	QueryUpdateByID      = `UPDATE products SET name = ?, quantity = ?, code_value = ?, is_published = ?, expiration = ?, price = ? WHERE id = ?;`
+	QueryDeleteByID      = `DELETE FROM products WHERE id = ?;`
+	QueryCodeValueExists = `SELECT id FROM products WHERE code_value = ?;`
 )
 
 type sqlStore struct {
@@ -21,12 +26,9 @@ func NewSqlStore(db *sql.DB) StoreInterface {
 
 func (s *sqlStore) Read(id int) (domain.Product, error) {
 	var product domain.Product
-	query := `
-		SELECT id, name, quantity, code_value, is_published, expiration, price
-		FROM products
-		 WHERE id = ?;
-	`
-	row := s.db.QueryRow(query, id)
+	//prepare statement
+	row := s.db.QueryRow(QueryGetByID, id)
+
 	err := row.Scan(&product.Id, &product.Name, &product.Quantity, &product.CodeValue, &product.IsPublished, &product.Expiration, &product.Price)
 	if err != nil {
 		return domain.Product{}, err
@@ -35,11 +37,8 @@ func (s *sqlStore) Read(id int) (domain.Product, error) {
 }
 
 func (s *sqlStore) Create(product domain.Product) error {
-	query := `
-		INSERT INTO products (name, quantity, code_value, is_published, expiration, price)
-		VALUES (?, ?, ?, ?, ?, ?);
-	`
-	stmt, err := s.db.Prepare(query)
+	//prepare statement
+	stmt, err := s.db.Prepare(QueryCreate)
 	if err != nil {
 		return err
 	}
@@ -55,11 +54,8 @@ func (s *sqlStore) Create(product domain.Product) error {
 }
 
 func (s *sqlStore) Update(product domain.Product) error {
-	query := `
-		UPDATE products SET name = ?, quantity = ?, code_value = ?, is_published = ?, expiration = ?, price = ? 
-		WHERE id = ?;
-	`
-	stmt, err := s.db.Prepare(query)
+	//prepare statement
+	stmt, err := s.db.Prepare(QueryUpdateByID)
 	if err != nil {
 		return err
 	}
@@ -75,11 +71,8 @@ func (s *sqlStore) Update(product domain.Product) error {
 }
 
 func (s *sqlStore) Delete(id int) error {
-	query := `
-		DELETE FROM products
-		WHERE id = ?;
-	`
-	stmt, err := s.db.Prepare(query)
+	//prepare statement
+	stmt, err := s.db.Prepare(QueryDeleteByID)
 	if err != nil {
 		return err
 	}
@@ -97,11 +90,8 @@ func (s *sqlStore) Delete(id int) error {
 func (s *sqlStore) Exists(codeValue string) bool {
 	var exists bool
 	var id int
-	query := `
-		SELECT id FROM products 
-		WHERE code_value = ?;
-	`
-	row := s.db.QueryRow(query, codeValue)
+	//prepare statement
+	row := s.db.QueryRow(QueryCodeValueExists, codeValue)
 	err := row.Scan(&id)
 	if err != nil {
 		return false
