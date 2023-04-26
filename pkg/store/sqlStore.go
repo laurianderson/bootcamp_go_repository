@@ -127,20 +127,34 @@ func (s *sqlStore) Update(product domain.Product) (err error) {
 	return nil
 }
 
-func (s *sqlStore) Delete(id int) error {
+func (s *sqlStore) Delete(id int) (err error) {
 	//prepare statement
 	stmt, err := s.db.Prepare(QueryDeleteByID)
 	if err != nil {
-		return err
+		err = ErrRepositoryInternal
+		return
 	}
+
+	//execute statement
 	res, err := stmt.Exec(id)
 	if err != nil {
-		return err
+		err = ErrRepositoryInternal
+		return
 	}
-	_, err = res.RowsAffected()
+
+	//check if product was deleted
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return err
+		err = ErrRepositoryInternal
+		return
 	}
+
+	if rowsAffected == 0 {
+		err = ErrRepositoryNotFound
+		return
+	}
+
+	//everything is ok
 	return nil
 }
 
