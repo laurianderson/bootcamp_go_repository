@@ -1,6 +1,16 @@
 package store
 
-import "github.com/laurianderson/bootcamp_go_repository/internal/domain"
+import (
+	"errors"
+	"github.com/laurianderson/bootcamp_go_repository/internal/domain"
+)
+
+// Errrors
+var (
+	ErrNotFound   = errors.New("product not found")
+	ErrInternal   = errors.New("an internal error")
+	ErrDuplicated = errors.New("duplicated product")
+)
 
 type StoreInterface interface {
 	// Read devuelve un producto por su id
