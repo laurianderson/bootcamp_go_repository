@@ -49,7 +49,7 @@ func (s *sqlStore) Create(product domain.Product) (err error) {
 	}
 	defer stmt.Close()
 
-	//insert product
+	//execute statement
 	res, err := stmt.Exec(product.Name, product.Quantity, product.CodeValue, product.IsPublished, product.Expiration, product.Price)
 	if err != nil {
 		driverErr, ok := err.(*mysql.MySQLError)
@@ -85,20 +85,45 @@ func (s *sqlStore) Create(product domain.Product) (err error) {
 	return
 }
 
-func (s *sqlStore) Update(product domain.Product) error {
+func (s *sqlStore) Update(product domain.Product) (err error) {
 	//prepare statement
 	stmt, err := s.db.Prepare(QueryUpdateByID)
 	if err != nil {
-		return err
+		err = ErrRepositoryInternal
+		return
 	}
+
+	//execute statement
 	res, err := stmt.Exec(product.Name, product.Quantity, product.CodeValue, product.IsPublished, product.Expiration, product.Price, product.Id)
 	if err != nil {
-		return err
+		driverErr, ok := err.(*mysql.MySQLError)
+		if !ok {
+			err = ErrRepositoryInternal
+			return
+		}
+		switch driverErr.Number {
+		case 1062:
+			err = ErrRepositoryDuplicated
+		default:
+			err = ErrRepositoryInternal
+		}
+
+		return
 	}
-	_, err = res.RowsAffected()
+
+	// Check if product was updated.
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return err
+		err = ErrRepositoryInternal
+		return
 	}
+
+	if rowsAffected != 1 {
+		err = ErrRepositoryNotFound
+		return
+	}
+
+	// Everything is ok.
 	return nil
 }
 
